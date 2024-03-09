@@ -1,0 +1,141 @@
+(* -*- mode: imi; -*- *)
+(************************************************************
+ *                    HyPTCTLChecker MODEL
+ *
+ * A toy scheduler of multiple agents
+ *
+ * Description     : A toy scheduler of multiple agents
+ * Correctness     : ?
+ * Source          : Own work
+ * Author          : Masaki Waga
+ * Input by        : Masaki Waga
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2024/03/17
+ * Last modified   : 2024/03/17
+ *
+ * HyPTCTLChecker version:  alpha
+ * IMITATOR version:  3.4-alpha
+ ************************************************************)
+
+var
+    (*------------------------------------------------------------*)
+    (* Clock variables *)
+    (*------------------------------------------------------------*)
+	c1, c2
+    : clock;
+    (*------------------------------------------------------------*)
+    (* Parameters *)
+    (*------------------------------------------------------------*)
+    wcet1, wcet2, bcet1, bcet2
+    : parameter;
+
+
+(************************************************************)
+automaton task1
+(************************************************************)
+actions: Request1, Start1, Done1, Interrupt1;
+
+(* The task is not started yet *)
+loc idling: invariant True: label {IDLE1}
+	when True sync Request1 do {c1 := 0} goto waiting;
+
+(* The task is submitted but not executed because of waiting or preemption *)
+loc waiting: invariant True stop{c1}: label {WAITING1, SUBMITTED1}
+	when True sync Start1 goto running;
+
+(* The task is executed on the processor *)
+loc running: invariant c1 <= wcet1: label {RUNNING1, SUBMITTED1}
+    when True sync Interrupt1 goto waiting;
+	when c1 >= bcet1 & c1 <= wcet1 sync Done1 goto idling;
+
+end (* task1 *)
+
+(************************************************************)
+automaton task2
+(************************************************************)
+actions: Request2, Start2, Done2, Interrupt2;
+
+(* The task is not started yet *)
+loc idling: invariant True: label {IDLE2}
+	when True sync Request2 do {c2 := 0} goto waiting;
+
+(* The task is submitted but not executed because of waiting or preemption *)
+loc waiting: invariant True stop{c2}: label {WAITING2, SUBMITTED2}
+	when True sync Start2 goto running;
+
+(* The task is executed on the processor *)
+loc running: invariant c2 <= wcet2: label {RUNNING2, SUBMITTED2}
+    when True sync Interrupt2 goto waiting;
+	when c2 >= bcet2 & c2 <= wcet2 sync Done2 goto idling;
+
+end (* task2 *)
+
+(************************************************************)
+automaton scheduler
+(************************************************************)
+actions: Request1, Start1, Done1, Interrupt1, Request2, Start2, Done2, Interrupt2;
+(* Fixed Priority scheduler: Task1 is higher priority than Task2*)
+
+loc non_1_non_2: invariant True: label {}
+	when True sync Request1 goto waiting_1_non_2;
+	when True sync Request2 goto non_1_waiting_2;
+
+(* We immediately start the new task if possible *)
+urgent loc waiting_1_non_2: invariant True: label {}
+    when True sync Start1 goto running_1_non_2;
+
+(* We immediately start the new task if possible *)
+urgent loc non_1_waiting_2: invariant True: label {}
+    when True sync Start2 goto non_1_running_2;
+
+(* We immediately start Task1 if possible *)
+urgent loc waiting_1_waiting_2: invariant True: label {}
+    when True sync Start1 goto running_1_waiting_2;
+
+loc running_1_non_2: invariant True: label {}
+    when True sync Done1 goto non_1_non_2;
+    when True sync Request2 goto running_1_waiting_2;
+
+loc non_1_running_2: invariant True: label {}
+    when True sync Done2 goto non_1_non_2;
+    when True sync Request1 goto waiting_1_running_2;
+
+(* We do not preempt because Task1 is higher priority *)
+loc running_1_waiting_2: invariant True: label {}
+    when True sync Done1 goto non_1_waiting_2;
+
+(* We interept because Task1 is higher priority *)
+urgent loc waiting_1_running_2: invariant True: label {}
+    when True sync Interrupt2 goto waiting_1_waiting_2;
+
+end
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+			loc[task1] := idling,
+			loc[task2] := idling,
+			loc[scheduler] := non_1_non_2,
+	;
+
+	continuous =
+			c1 = 0 &
+			c2 = 0 &
+            bcet1 >= 1 &
+            bcet2 >= 1 &
+            wcet1 >= bcet1 &
+            wcet2 >= bcet2
+	;
+}
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

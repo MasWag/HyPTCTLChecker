@@ -1,0 +1,117 @@
+(* -*- mode: imi; -*- *)
+(************************************************************
+ *                    HyPTCTLChecker MODEL
+ * 
+ * ATM
+ *
+ * Description      : An ATM modeled using a PTA. Version fixed by changing incompatible constraints.
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Academic ; Toy
+ * Source           : Fig.1, "Parameter Synthesis Problems for one parametric clock Timed Automata" (https://arxiv.org/abs/1809.07177)
+ * bibkey           : DCL18
+ * Author           : Liyun Dai, Taolue Chen, Zhiming Liu, Bican Xia, Naijun Zhan, Kim G. Larsen
+ * Modeling         : Liyun Dai, Taolue Chen, Zhiming Liu, Bican Xia, Naijun Zhan, Kim G. Larsen + Étienne André
+ * Input by         : Jawher Jerray, Étienne André
+ * License          : unclear ("Non-exclusive license to distribute" on arxiv: https://arxiv.org/licenses/nonexclusive-distrib/1.0/license.html)
+ * 
+ * Created          : 2018/09/23
+ * Fork from        : ATM/fig1_DCLXZL18-fixed.imi
+ * Fork date        : 2024/03/18
+ * Last modified    : 2024/03/18
+ * 
+ * HyPTCTLChecker version:  alpha
+ * IMITATOR version:  3.4-alpha
+ ******************************************************************************)
+
+(* This takes about 3837.548 seconds *)
+
+var
+
+(* Clocks *)
+ 	local_time,
+	total_session_time,
+		: clock;
+
+(* Parameters *)
+	max_total_time = 10, (* The maximum time of each session *)
+	max_login_time = 5, (* The maximum time to able to stay at the login state *)
+	max_response_time = 3, (* The maximum response time for the ATM *)
+    param (* The parameter used in the property *)
+		: parameter;
+
+(************************************************************)
+automaton ATM
+(************************************************************)
+
+loc Idle: invariant True: label{}
+	when True do {total_session_time := 0} goto Start;
+
+loc Start: invariant total_session_time <= max_total_time: label{}
+	when total_session_time = max_total_time goto Idle;
+	when total_session_time <= max_total_time do { local_time := 0 } goto Login;
+
+loc Login: invariant local_time <= max_login_time && total_session_time <= max_total_time: label{}
+	when total_session_time = max_total_time goto Idle;
+	when True do {local_time := 0} goto ask_Withdrawals;
+	when local_time = max_login_time goto Start;
+	when True do {local_time := 0} goto ask_Check;
+
+(* The user asks to withdraw *)
+loc ask_Withdrawals: invariant local_time <= max_response_time && total_session_time <= max_total_time: label{WithdrawIn}
+	when True goto get_Withdrawals;
+
+(* The ATM gives money *)
+urgent loc get_Withdrawals: invariant local_time <= max_response_time && total_session_time <= max_total_time: label{WithdrawOut}
+	when True do { local_time := 0 } goto Login;
+
+(* The user asks to show the balance *)
+loc ask_Check: invariant local_time <= max_response_time && total_session_time <= max_total_time: label{CheckIn}
+	when True goto get_Check;
+
+(* The ATM shows the balance *)
+urgent loc get_Check: invariant local_time <= max_response_time && total_session_time <= max_total_time: label{CheckOut}
+	when True do { local_time := 0 } goto Login;
+
+end (* ATM *)
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+  discrete =
+	 loc[ATM] := Idle,
+
+  	(*------------------------------------------------------------*)
+  	(* Initial discrete assignments *)
+  	(*------------------------------------------------------------*)
+
+  ;
+
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& local_time = 0
+  	& total_session_time = 0
+
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& max_total_time >= 0
+  	& max_login_time >= 0
+  	& max_response_time >= 0
+  	& max_response_time <= 3
+  	& param >= 0
+    ;
+}
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

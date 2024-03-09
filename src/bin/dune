@@ -1,0 +1,10 @@
+(executable
+ (public_name HyPTCTLChecker)
+ (libraries lib))
+
+(env
+  (dev
+    (flags
+      (:standard -warn-error -A -w -39)
+    )))
+

@@ -1,0 +1,49 @@
+(* -*- mode: imitator-property; -*- *)
+(************************************************************
+ *                 HyPTCTLChecker PROPERTY
+ *
+ * Description     : Robust observational nondeterminism for an ATM benchmark
+ * Assumptions     : The model should have a parameter "parameter"
+ * Source          : Own work
+ * Author          : Masaki Waga
+ * Input by        : Masaki Waga
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2024/03/18
+ * Last modified   : 2024/03/18
+ *
+ * HyPTCTLChecker version: alpha
+ * IMITATOR version: 3.4-alpha
+ ************************************************************)
+var COUNT_WithdrawIn_1: mod 2
+var COUNT_WithdrawIn_2: mod 2
+(* var COUNT_CheckIn_1: mod 2 *)
+(* var COUNT_CheckIn_2: mod 2 *)
+var COUNT_WithdrawOut_1: mod 4
+var COUNT_WithdrawOut_2: mod 4
+(* var COUNT_CheckOut_1: mod 4 *)
+(* var COUNT_CheckOut_2: mod 4 *)
+let large_deviation_withdraw = LAST_WithdrawOut_1 - LAST_WithdrawOut_2 < -param || LAST_WithdrawOut_1 - LAST_WithdrawOut_2 > param in
+(* let large_deviation_check = LAST_CheckOut_1 - LAST_CheckOut_2 < -param || LAST_CheckOut_1 - LAST_CheckOut_2 > param in *)
+<*
+property := #synth E (
+	(* The timing to press the withdrawal button is synchronized *)
+	mod(COUNT_WithdrawIn_1, 2) - mod(COUNT_WithdrawIn_2, 2) = 0 &&
+	(* The timing to press the check button is synchronized *)
+	(* mod(COUNT_CheckIn_1, 2) - mod(COUNT_CheckIn_2, 2) = 0 && *)
+	(* Total number of withdrawal has at most 1 difference *)
+	mod(COUNT_WithdrawOut_1 - COUNT_WithdrawOut_2, 4) <> 2 (* && *)
+	(* Total number of check has at most 1 difference *)
+	(* mod(COUNT_CheckOut_1 - COUNT_CheckOut_2, 4) <> 2 *)
+	) U (
+	(* The number of withdrawal view is the same *)
+	(mod(COUNT_WithdrawOut_1 - COUNT_WithdrawOut_2, 4) = 0 &&
+	(* The timing to get the view has large deviation *)
+    large_deviation_withdraw)(*  || *)
+	(* (\* The number of check view is the same *\) *)
+	(* (mod(COUNT_CheckOut_1 - COUNT_CheckOut_2, 4) = 0 && *)
+	(* (\* The timing to get the view has large deviation *\) *)
+    (* large_deviation_check) *)
+	)
+;
+*>

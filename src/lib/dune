@@ -1,0 +1,19 @@
+(library
+ (name lib)
+ (libraries extlib fileutils str unix threads)
+ (inline_tests)
+ (preprocess (pps ppx_inline_test))
+ (modules_without_implementation
+   automaton
+   parsingStructure))
+
+(env
+  (dev
+    (flags
+      (:standard -warn-error -A -w -39)
+    )))
+
+(menhir
+  (modules PropertyParser ModelParser))
+(ocamllex
+  (modules ModelLexer PropertyLexer))

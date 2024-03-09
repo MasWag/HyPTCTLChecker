@@ -1,0 +1,72 @@
+(* -*- mode:imi -*- *)
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Running example for HyperPTCTL
+ * Description      : Running example for HyperPTCTL
+ * Correctness      :
+ * Scalable         : no
+ * Generated        : no
+ * Categories       :
+ * Source           : Own work
+ * bibkey           :
+ * Author           : Masaki Waga
+ * Modeling         : Masaki Waga
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/02/27
+ * Last modified    : 2024/03/05
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	c,
+		: clock;
+    param,
+        : parameter;
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+(* actions: notify; *)
+
+loc l0: invariant c <= 3 : label {a}
+	when c < 3 do {c := 0} goto l1;
+
+loc l1: invariant c <= 3: label {b}
+ 	when c < 3 goto l0;
+
+end (* pta *)
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l0,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& c = 0
+
+	;
+}
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -1,0 +1,171 @@
+(* -*- mode: imi; -*- *)
+(************************************************************
+ *                    HyPTCTLChecker MODEL
+ *
+ * Case study for side channel timing attack
+ *
+ * Description     : Encoding of a java program.
+ * Correctness     : No information leakage
+ * Source          : https://github.com/Apogee-Research/STAC/blob/master/Canonical_Examples/Source/Category2_not_vulnerable.java
+ * Author          : https://github.com/Apogee-Research/STAC
+ * Modeling        : Sun Jun, Étienne André, Li Jiaying
+ * Input by        : Li Jiaying, Étienne André, Masaki Waga
+ * License         : MIT License
+ *
+ * Created         : 2019/02/25
+ * Fork date       : 2024/03/20
+ * Last modified   : 2024/03/20
+ *
+ * HyPTCTLChecker version:  alpha
+ * IMITATOR version: 3.4-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	cl,
+ 	abs_clock,
+		: clock;
+
+(* Discrete *)
+	nb_verif,
+		: int;
+
+(* Parameters *)
+	(* Global parameters necessary for the general encoding and our method *)
+	epsilon,
+ 	abs_ptime,
+ 	
+ 	(* Local parameters to encode symbolic data *)
+	xlen, (* length *)
+	xnonletters_1, (* Boolean: is it containing only letters? *)
+	xfirstmismatch,  (* Position of the first mismatch in the password; if xfirstmismatch > xlen then password is correct *)
+
+		: parameter;
+
+(* Constants *)
+	NB_VERIF = 10,
+		:int;
+
+	PRIVATE_PASSWORD_LENGTH = 10,
+	DELAY = 150000,
+		: parameter;
+
+
+(************************************************************)
+automaton pta
+(************************************************************)
+actions: setupserver, readx;
+
+(* Beginning *)
+loc l1: invariant cl <= epsilon : label{}
+	when cl <= epsilon do {cl := 0} sync setupserver goto l2;
+
+(* userInput = in.readLine(); *)
+loc l2: invariant cl <= epsilon: label{}
+	when cl <= epsilon do {cl := 0} sync readx goto l3;
+
+(* test: "if (userInput.length() <= 10 && userInput.matches("[a-z]+")) " *)
+loc l3: invariant cl <= epsilon: label{}
+	when cl <= epsilon & xlen > 10 do {cl := 0} goto final1;
+	when cl <= epsilon & xnonletters_1 > 0 do {cl := 0} goto final1;
+	when cl <= epsilon & xlen <= 10 & xnonletters_1 = 0 do {cl := 0, nb_verif := 1} goto doProcess;
+
+loc final1: invariant True: label{}
+
+urgent loc doProcess: invariant nb_verif <= NB_VERIF: label {}
+	(* Looping *)
+	when nb_verif < NB_VERIF do {nb_verif := nb_verif + 1} goto check_and_sleep;
+	(* Finished *)
+	when nb_verif = NB_VERIF do {nb_verif := nb_verif + 1} goto l9;
+
+loc check_and_sleep: invariant True: label{}
+		(* Pass matches *)
+	when xlen = PRIVATE_PASSWORD_LENGTH & xfirstmismatch > xlen & xlen = 1 & cl = 1 * DELAY do {cl := 0} goto private;
+	when xlen = PRIVATE_PASSWORD_LENGTH & xfirstmismatch > xlen & xlen = 2 & cl = 2 * DELAY do {cl := 0} goto private;
+	when xlen = PRIVATE_PASSWORD_LENGTH & xfirstmismatch > xlen & xlen = 3 & cl = 3 * DELAY do {cl := 0} goto private;
+	when xlen = PRIVATE_PASSWORD_LENGTH & xfirstmismatch > xlen & xlen = 4 & cl = 4 * DELAY do {cl := 0} goto private;
+	when xlen = PRIVATE_PASSWORD_LENGTH & xfirstmismatch > xlen & xlen = 5 & cl = 5 * DELAY do {cl := 0} goto private;
+	when xlen = PRIVATE_PASSWORD_LENGTH & xfirstmismatch > xlen & xlen = 6 & cl = 6 * DELAY do {cl := 0} goto private;
+	when xlen = PRIVATE_PASSWORD_LENGTH & xfirstmismatch > xlen & xlen = 7 & cl = 7 * DELAY do {cl := 0} goto private;
+	when xlen = PRIVATE_PASSWORD_LENGTH & xfirstmismatch > xlen & xlen = 8 & cl = 8 * DELAY do {cl := 0} goto private;
+	when xlen = PRIVATE_PASSWORD_LENGTH & xfirstmismatch > xlen & xlen = 9 & cl = 9 * DELAY do {cl := 0} goto private;
+	when xlen = PRIVATE_PASSWORD_LENGTH & xfirstmismatch > xlen & xlen = 10 & cl = 10 * DELAY do {cl := 0} goto private;
+
+		(* Pass does not match: different symbol spotted BEFORE private password length *)
+	when xfirstmismatch < xlen & xfirstmismatch < PRIVATE_PASSWORD_LENGTH & xfirstmismatch = 1 & cl = 1 * DELAY do {cl := 0} goto l9;
+	when xfirstmismatch < xlen & xfirstmismatch < PRIVATE_PASSWORD_LENGTH & xfirstmismatch = 2 & cl = 2 * DELAY do {cl := 0} goto l9;
+	when xfirstmismatch < xlen & xfirstmismatch < PRIVATE_PASSWORD_LENGTH & xfirstmismatch = 3 & cl = 3 * DELAY do {cl := 0} goto l9;
+	when xfirstmismatch < xlen & xfirstmismatch < PRIVATE_PASSWORD_LENGTH & xfirstmismatch = 4 & cl = 4 * DELAY do {cl := 0} goto l9;
+	when xfirstmismatch < xlen & xfirstmismatch < PRIVATE_PASSWORD_LENGTH & xfirstmismatch = 5 & cl = 5 * DELAY do {cl := 0} goto l9;
+	when xfirstmismatch < xlen & xfirstmismatch < PRIVATE_PASSWORD_LENGTH & xfirstmismatch = 6 & cl = 6 * DELAY do {cl := 0} goto l9;
+	when xfirstmismatch < xlen & xfirstmismatch < PRIVATE_PASSWORD_LENGTH & xfirstmismatch = 7 & cl = 7 * DELAY do {cl := 0} goto l9;
+	when xfirstmismatch < xlen & xfirstmismatch < PRIVATE_PASSWORD_LENGTH & xfirstmismatch = 8 & cl = 8 * DELAY do {cl := 0} goto l9;
+	when xfirstmismatch < xlen & xfirstmismatch < PRIVATE_PASSWORD_LENGTH & xfirstmismatch = 9 & cl = 9 * DELAY do {cl := 0} goto l9;
+	when xfirstmismatch < xlen & xfirstmismatch < PRIVATE_PASSWORD_LENGTH & xfirstmismatch = 10 & cl = 10 * DELAY do {cl := 0} goto l9;
+(* 		etc. *)
+		
+(*		(* Pass does not match: different symbol spotted AFTER private password length *)
+	when xfirstmismatch < xlen & xfirstmismatch >= PRIVATE_PASSWORD_LENGTH & cl = PRIVATE_PASSWORD_LENGTH * DELAY do {cl := 0} goto doProcess;*)
+	
+		(* Pass does not match: longer than the private password (but all symbols are equal) *)
+			(*** NOTE: IMITATOR does not allow constant * constant :( ***)
+	when xlen > PRIVATE_PASSWORD_LENGTH & cl = (*PRIVATE_PASSWORD_LENGTH * DELAY*)1500000 do {cl := 0} goto l9;
+
+urgent loc private: invariant True: label{PRIVATE}
+       when True goto doProcess;
+
+loc l9: invariant cl <= epsilon: label{}
+	when cl <= epsilon & abs_clock = abs_ptime goto final2;
+
+loc final2: invariant True: label{GOAL}
+
+end (* pta *)
+
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := initial,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete assignments *)
+		(*------------------------------------------------------------*)
+		nb_verif := 0
+	;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+	 	& cl = 0
+	 	& abs_clock = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& abs_ptime >= 0
+	
+		& xlen >= 0
+	
+		& xfirstmismatch >= 0
+        & xnonletters_1 >= 0
+		& epsilon >= 0
+		(* Quite arbitrary *)
+		& epsilon <= 1
+	;
+}
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

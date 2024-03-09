@@ -1,0 +1,38 @@
+(* -*- mode: imitator-property; -*- *)
+(************************************************************
+ *                 HyPTCTLChecker PROPERTY
+ *
+ * Unfair Scheduler
+ *
+ * Description     : Assert that the scheduler is unfair
+ * Assumptions     : The model should have labels "PRIVATE" and "GOAL" showing the entrance to the private and goal locations, respectively.
+ * Source          : Own work
+ * Author          : Masaki Waga
+ * Input by        : Masaki Waga
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2024/03/17
+ * Last modified   : 2024/03/17
+ *
+ * HyPTCTLChecker version: alpha
+ * IMITATOR version: 3.4-alpha
+ ************************************************************)
+var COUNT_SUBMITTED1_1: mod 2
+var COUNT_SUBMITTED2_2: mod 2
+var COUNT_RUNNING1_1: mod 2
+var COUNT_RUNNING2_2: mod 2
+var COUNT_WAITING1_1: mod 2
+var COUNT_WAITING2_2: mod 2
+let large_start_diff = LAST_RUNNING1_1 - LAST_RUNNING2_2 >= param  || LAST_RUNNING1_1 - LAST_RUNNING2_2 <= -param in
+<*
+(* We bind two traces *)
+property := #synth E (
+    (* Synchronize the job submission *)
+    mod(COUNT_SUBMITTED1_1, 2) - mod(COUNT_SUBMITTED2_2, 2) = 0
+    ) U (
+    (* Assert that the difference between the time of the begining of the jobs is large  *)
+    mod(COUNT_RUNNING1_1, 2) - mod(COUNT_RUNNING2_2, 2) = 0 &
+    large_start_diff
+    )
+;
+*>

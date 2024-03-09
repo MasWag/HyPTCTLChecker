@@ -1,0 +1,33 @@
+(* -*- mode: imitator-property; -*- *)
+(************************************************************
+ *                 HyPTCTLChecker PROPERTY
+ *
+ *
+ * Description     : Synthesize a the deviation of possible tick preserving the discrete ordering
+ * Assumptions     : The model should have a parameter "parameter"
+ * Source          : Own work
+ * Author          : Masaki Waga
+ * Input by        : Masaki Waga
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2024/03/18
+ * Last modified   : 2024/03/18
+ *
+ * HyPTCTLChecker version: alpha
+ * IMITATOR version: 3.4-alpha
+ ************************************************************)
+var COUNT_a_1: mod 4
+var COUNT_a_2: mod 4
+let large_deviation = LAST_a_1 - LAST_a_2 < -param || LAST_a_1 - LAST_a_2 > param in
+<*
+property := #synth E (
+	(* Transition is nearly synchronous *)
+	mod(COUNT_a_1 - COUNT_a_2, 4) = 0 || mod(COUNT_a_1 - COUNT_a_2, 4) = 1 || mod(COUNT_a_1 - COUNT_a_2, 4) = 3
+	) U (
+	(* With the same number of transitions *)
+	mod(COUNT_a_1 - COUNT_a_2, 4) = 0 &&
+	(* The last transitions has large deviation *)
+    large_deviation
+	)
+;
+*>

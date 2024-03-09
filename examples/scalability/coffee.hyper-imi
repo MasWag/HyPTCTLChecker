@@ -1,0 +1,95 @@
+(* -*- mode: imi; -*- *)
+(************************************************************
+ *                    HyPTCTLChecker MODEL
+ *
+ * Coffee machine
+ *
+ * Description     : Coffee machine (no coin, coffee is free!); a single button is used to wake the machine up, and to add sugar. Then a cup, and coffee are delivered after a (parametric) time. Model from
+ * Correctness     : Many possibilities (e.g., "it is possible to get a coffee")
+ * Source          : Own work
+ * Author          : Étienne André
+ * Input by        : Masaki Waga
+ *
+ * Created         : 2011/01/21
+ * Fork from       : Coffee/coffee.imi
+ * Fork date       : 2024/03/19
+ * Last modified   : 2024/03/19
+ *
+ * HyPTCTLChecker version:  alpha
+ * IMITATOR version:  3.4-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	local_time,
+ 	total_time, (* The total time of the coffee machine *)
+		: clock;
+
+(* Parameters. HyPTCTLChecker does not allow initialization here *)
+	sugar_interval, (* The minimum time between two consecutive requests for sugar *)
+	total_sugar_time = 5, (* The time during which one can request sugar *)
+	total_coffee_duration = 5, (* The total time necessary to prepare coffee *)
+    param, (* The parameter used in the property *)
+		: parameter;
+
+(************************************************************)
+automaton machine
+(************************************************************)
+actions: press, cup, coffee;
+
+loc idle: invariant True: label {}
+	when True sync press do {local_time := 0, total_time := 0} goto sugar_waiting;
+
+loc sugar_waiting: invariant total_time <= total_sugar_time: label {}
+	when local_time = sugar_interval sync press goto sugar_given;
+	when total_time = total_sugar_time sync cup do {} goto preparing_coffee;
+
+urgent loc sugar_given: invariant True: label {SUGAR}
+	when True do {local_time := 0} goto sugar_waiting;
+
+loc preparing_coffee: invariant total_time <= total_coffee_duration: label {}
+	(* Modification from coffee.imi: when we're done, well we're done *)
+	when total_time = total_coffee_duration sync coffee goto cdone;
+
+loc cdone: invariant True: label {GOAL}
+
+end (* machine *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete =
+    	(*------------------------------------------------------------*)
+	    (* Initial location *)
+	    (*------------------------------------------------------------*)
+	    loc[machine] := idle,
+    ;
+
+    continuous =
+	    (*------------------------------------------------------------*)
+	    (* Initial clock constraints *)
+	    (*------------------------------------------------------------*)
+	    & local_time = 0
+	    & total_time = 0
+
+    	(*------------------------------------------------------------*)
+	    (* Parameter constraints *)
+    	(*------------------------------------------------------------*)
+	    & sugar_interval >= 1
+	    & total_sugar_time >= 0
+	    & total_sugar_time <= 10
+	    & total_coffee_duration >= 0
+	    & param >= 0
+    ;
+}
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

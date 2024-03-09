@@ -1,0 +1,27 @@
+(* -*- mode: imitator-property; -*- *)
+(************************************************************
+ *                 HyPTCTLChecker PROPERTY
+ *
+ *
+ * Description     : Toy example to evaluate the scalability of EFSynth with respect to the number of quantified path variables.
+ * Assumptions     : The model should have a parameter "parameter"
+ * Source          : Own work
+ * Author          : Masaki Waga
+ * Input by        : Masaki Waga
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2024/03/19
+ * Last modified   : 2024/03/19
+ *
+ * HyPTCTLChecker version: alpha
+ * IMITATOR version: 3.4-alpha
+ ************************************************************)
+(* We use the special clock variable for the global time *)
+use global_time;
+<*
+property := #synth EF_[param,param] (
+	(* Assert the number of sugars *)
+	COUNT_SUGAR_1 - COUNT_SUGAR_2 = 1
+	)
+;
+*>

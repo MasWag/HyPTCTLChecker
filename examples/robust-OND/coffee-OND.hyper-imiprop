@@ -1,0 +1,45 @@
+(* -*- mode: imitator-property; -*- *)
+(************************************************************
+ *                 HyPTCTLChecker PROPERTY
+ *
+ * Description     : Robust observational nondeterminism for a coffee machine benchmark
+ * Assumptions     : The model should have a parameter "parameter"
+ * Source          : Own work
+ * Author          : Masaki Waga
+ * Input by        : Masaki Waga
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2024/03/18
+ * Last modified   : 2024/03/18
+ *
+ * HyPTCTLChecker version: alpha
+ * IMITATOR version: 3.4-alpha
+ ************************************************************)
+var COUNT_button_1: mod 2
+var COUNT_button_2: mod 2
+var COUNT_sugar_1: mod 4
+var COUNT_sugar_2: mod 4
+var COUNT_GOAL_1: mod 2
+var COUNT_GOAL_2: mod 2
+let large_deviation = LAST_sugar_1 - LAST_sugar_2 < -param || LAST_sugar_1 - LAST_sugar_2 > param in
+<*
+property := #synth E (
+	(* The timing to press the button is synchronized *)
+	mod(COUNT_button_1, 2) - mod(COUNT_button_2, 2) = 0 &&
+	(* Total number of sugars has at most 1 difference *)
+	mod(COUNT_sugar_1 - COUNT_sugar_2, 4) <> 2 &&
+    (* 2024-03-25: Why we have the following?? *)
+	(* Not reaching the goal *)
+    mod(COUNT_GOAL_1, 2) = 0 &&
+    mod(COUNT_GOAL_2, 2) = 0
+	) U (
+	(* The number of obtained sugar is the same *)
+	mod(COUNT_sugar_1 - COUNT_sugar_2, 4) = 0 &&
+	(* The timing to get the latest sugar has large deviation *)
+    large_deviation &&
+	(* Reach the goal at the same time *)
+    mod(COUNT_GOAL_1, 2) = 1 &&
+    mod(COUNT_GOAL_2, 2) = 1
+	)
+;
+*>

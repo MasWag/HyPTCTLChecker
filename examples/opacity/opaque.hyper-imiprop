@@ -1,0 +1,39 @@
+(* -*- mode: imitator-property; -*- *)
+(************************************************************
+ *                 HyPTCTLChecker PROPERTY
+ *
+ * Opacity
+ *
+ * Description     : Assert the possibility to reach the goal location with and without going via the private location. This property is intended to be used with a parameter showing the total execution time so that the opaque execution time is synthesized.
+ * Assumptions     : The model should have labels "PRIVATE" and "GOAL" showing the entrance to the private and goal locations, respectively.
+ * Source          : Own work
+ * Author          : Masaki Waga
+ * Input by        : Masaki Waga
+ * License         : MIT License
+ *
+ * Created         : 2024/03/17
+ * Last modified   : 2024/03/17
+ *
+ * HyPTCTLChecker version: alpha
+ * IMITATOR version: 3.4-alpha
+ ************************************************************)
+(* We have no LastExpr *)
+<*
+(* We bind two traces *)
+property := #synth E (
+    (* Both traces does not reach the goal *)
+    status_GOAL_1 = UNCHANGED &
+    status_GOAL_2 = UNCHANGED &
+    (* trace 1 does not enter the private location *)
+    COUNT_PRIVATE_1 = 0
+    ) U (
+    (* Both traces reach the goal at the same time *)
+    status_GOAL_1 = CHANGED_UP &
+    status_GOAL_2 = CHANGED_UP &
+    (* trace 1 does not enter the private location *)
+    COUNT_PRIVATE_1 = 0 &
+    (* trace 2 enters the private location *)
+    COUNT_PRIVATE_2 > 0
+    )
+;
+*>

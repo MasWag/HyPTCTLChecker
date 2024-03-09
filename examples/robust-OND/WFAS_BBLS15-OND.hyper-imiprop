@@ -1,0 +1,40 @@
+(* -*- mode: imitator-property; -*- *)
+(************************************************************
+ *                 HyPTCTLChecker PROPERTY
+ *
+ * Description     : Robust observational nondeterminism for an ATM benchmark
+ * Assumptions     : The model should have a parameter "parameter"
+ * Source          : Own work
+ * Author          : Masaki Waga
+ * Input by        : Masaki Waga
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2024/03/20
+ * Last modified   : 2024/03/20
+ *
+ * HyPTCTLChecker version: alpha
+ * IMITATOR version: 3.4-alpha
+ ************************************************************)
+var COUNT_WAKEUP1_1: mod 2
+var COUNT_WAKEUP1_2: mod 2
+var COUNT_WAKEUP2_1: mod 2
+var COUNT_WAKEUP2_2: mod 2
+var COUNT_DONE_1: mod 4
+var COUNT_DONE_2: mod 4
+let large_deviation = LAST_DONE_1 - LAST_DONE_2 < -param || LAST_DONE_1 - LAST_DONE_2 > param in
+<*
+property := #synth E (
+	(* The timing to wake up the first sensor is synchronized *)
+	mod(COUNT_WAKEUP1_1, 2) - mod(COUNT_WAKEUP1_2, 2) = 0 &&
+	(* The timing to wake up the second sensor is synchronized *)
+	mod(COUNT_WAKEUP2_1, 2) - mod(COUNT_WAKEUP2_2, 2) = 0 &&
+	(* Total number of DONE has at most 1 difference *)
+	mod(COUNT_DONE_1 - COUNT_DONE_2, 4) <> 2
+	) U (
+	(* The number of DONE is the same *)
+	mod(COUNT_DONE_1 - COUNT_DONE_2, 4) = 0 &&
+	(* The timing to finish the loop has large deviation *)
+    large_deviation
+	)
+;
+*>

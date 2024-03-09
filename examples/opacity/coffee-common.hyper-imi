@@ -1,0 +1,98 @@
+(* -*- mode: imi; -*- *)
+(************************************************************
+ *                    HyPTCTLChecker MODEL
+ *
+ * Coffee machine
+ *
+ * Description     : Coffee machine (no coin, coffee is free!); a single button is used to wake the machine up, and to add sugar. Then a cup, and coffee are delivered after a (parametric) time. Model from
+ * Correctness     : Many possibilities (e.g., "it is possible to get a coffee")
+ * Source          : Own work
+ * Author          : Étienne André
+ * Input by        : Masaki Waga
+ *
+ * Created         : 2011/01/21
+ * Fork from       : Coffee/coffee.imi
+ * Fork date       : 2024/03/24
+ * Last modified   : 2024/03/24
+ *
+ * HyPTCTLChecker version:  alpha
+ * IMITATOR version:  3.4-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+ 	y, (* The total time of the coffee machine *)
+		: clock;
+
+(* Parameters. HyPTCTLChecker does not allow initialization here *)
+	p1, (* The minimum time between two consecutive requests for sugar *)
+	p2, (* The time during which one can request sugar *)
+	p3, (* The maximum time to give the sugar *)
+    param (* The parameter used in the property *)
+		: parameter;
+
+(************************************************************)
+automaton machine
+(************************************************************)
+actions: press, cup, coffee;
+
+loc idle: invariant True: label {}
+	when True sync press do {x := 0, y := 0} goto sugar_idle;
+
+loc sugar_idle: invariant y <= p2: label {}
+	when x >= p1 sync press do {x := 0} goto sugar_waiting;
+	when y = p2 sync cup do {} goto preparing_coffee;
+
+loc sugar_waiting: invariant y <= p2: label {button,PRIVATEx}
+	when x <= p3 do {x := 0} goto sugar_given;
+	when y = p2 sync cup do {} goto preparing_coffee;
+
+loc sugar_given: invariant y <= p2: label {sugar,PRIVATE}
+	when x >= p1 sync press do {x := 0} goto sugar_waiting;
+	when y = p2 sync cup do {} goto preparing_coffee;
+
+loc preparing_coffee: invariant True: label {}
+	when True sync coffee do {x := 0} goto cdone;
+
+loc cdone: invariant True: label {GOAL}
+
+end (* machine *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete =
+    	(*------------------------------------------------------------*)
+	    (* Initial location *)
+	    (*------------------------------------------------------------*)
+	    loc[machine] := idle,
+    ;
+
+    continuous =
+	    (*------------------------------------------------------------*)
+	    (* Initial clock constraints *)
+	    (*------------------------------------------------------------*)
+	    & x = 0
+	    & y = 0
+
+    	(*------------------------------------------------------------*)
+	    (* Parameter constraints *)
+    	(*------------------------------------------------------------*)
+	    & p1 >= 0
+	    & p2 >= 0
+	    & p3 >= 0
+	    & param >= 0
+    ;
+}
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

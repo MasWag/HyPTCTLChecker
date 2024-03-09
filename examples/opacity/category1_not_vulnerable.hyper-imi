@@ -1,0 +1,108 @@
+(* -*- mode: imi; -*- *)
+(************************************************************
+ *                    HyPTCTLChecker MODEL
+ *
+ * Case study for side channel timing attack
+ *
+ * Description     : Encoding of a java program.
+ * Correctness     : No information leakage
+ * Source          : https://github.com/Apogee-Research/STAC/blob/master/Canonical_Examples/Source/Category1_not_vulnerable.java
+ * Author          : https://github.com/Apogee-Research/STAC
+ * Modeling        : Sun Jun, Étienne André
+ * Input by        : Étienne André, Masaki Waga
+ * License         : MIT License
+ *
+ * Created         : 2018/10/31
+ * Fork date       : 2024/03/20
+ * Last modified   : 2024/03/20
+ *
+ * HyPTCTLChecker version:  alpha
+ * IMITATOR version:  3.4-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	cl,
+ 	abs_clock,
+		: clock;
+
+(* Parameters *)
+	(* Global parameters necessary for the general encoding and our method *)
+	epsilon,
+ 	abs_ptime,
+		: parameter;
+
+(* Constants *)
+	n_square = 32*32,
+		: parameter;
+
+
+(************************************************************)
+automaton pta
+(************************************************************)
+actions: setupserver, readx;
+
+loc l1: invariant cl <= epsilon: label {}
+	when cl <= epsilon do {cl := 0} sync setupserver goto l2;
+
+loc l2: invariant cl <= epsilon: label {}
+	when cl <= epsilon do {cl := 0} sync readx goto l3;
+
+loc l3: invariant cl <= epsilon: label {}
+    (* We remove x_1 and secret_1 and just have nondeterministic branching *)
+	when cl <= epsilon do {cl := 0} goto final1;
+	when cl <= epsilon do {cl := 0} goto l4;
+
+loc final1: invariant True: label {GOAL}
+
+loc l4: invariant cl <= epsilon: label {}
+    (* We remove x_1 and secret_1 and just have nondeterministic branching *)
+	when cl <= epsilon do {cl := 0} goto hidden1;
+	when cl <= epsilon do {cl := 0} goto hidden2;
+
+loc hidden1: invariant cl <= n_square + epsilon & abs_clock <= abs_ptime: label {PRIVATE}
+	when n_square - epsilon <= cl & cl <= n_square + epsilon & abs_clock = abs_ptime goto final2;
+
+loc hidden2: invariant cl <= n_square + epsilon & abs_clock <= abs_ptime: label {}
+	when n_square - epsilon <= cl & cl <= n_square + epsilon & abs_clock = abs_ptime goto final2;
+
+loc final2: invariant True: label {GOAL}
+
+end (* pta *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+	;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+	 	& cl = 0
+	 	& abs_clock = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& abs_ptime >= 0
+		& epsilon >= 0
+		(* Quite arbitrary *)
+		& epsilon <= 10
+	;
+}
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
